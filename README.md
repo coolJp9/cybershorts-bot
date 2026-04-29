@@ -4,6 +4,19 @@ An autonomous, AI-powered pipeline that fetches the day's most important cyberse
 
 ---
 
+<p align="center">
+  <a href="#features">Features</a> •
+  <a href="#architecture">Architecture</a> •
+  <a href="#quick-start-recommended">Quick Start</a> •
+  <a href="#setup">Setup</a> •
+  <a href="#usage">Usage</a> •
+  <a href="docs/workflow.md">Workflow</a> •
+  <a href="#push-to-github">GitHub</a> •
+  <a href="#contributing">Contributing</a>
+</p>
+
+---
+
 ## Features
 
 - **Multi-source news aggregation** — RSS/Atom feeds (BleepingComputer, KrebsOnSecurity, TheHackerNews, and 15 more), Hacker News top stories, and Algolia HN search
@@ -20,37 +33,7 @@ An autonomous, AI-powered pipeline that fetches the day's most important cyberse
 
 ## Architecture
 
-```
-News Sources (RSS, HN, Algolia)
-        │
-        ▼
-   app/fetchers/
-  (rss, hackernews, aggregator)
-        │
-        ▼
- app/summarizer/story_selector
-  (score, dedup, AI batch plan)
-        │
-        ▼
- app/script_generator/generator
-  (Ollama → Gemini → static)
-        │
-        ▼
-      app/tts/engine
-  (edge-tts → pyttsx3)
-        │
-        ▼
- app/video_engine/assembler
-  (Pexels footage + FFmpeg)
-        │
-        ▼
-   app/subtitles/generator
-  (SRT caption file)
-        │
-        ▼
-   app/uploader/youtube
-  (OAuth2 scheduled upload)
-```
+![Architecture](https://github.com/coolJp9/cybershorts-bot/blob/main/docs/architecture.svg)
 
 ---
 

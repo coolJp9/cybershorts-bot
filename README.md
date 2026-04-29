@@ -33,7 +33,7 @@ An autonomous, AI-powered pipeline that fetches the day's most important cyberse
 
 ## Architecture
 
-![Architecture](https://github.com/coolJp9/cybershorts-bot/blob/main/docs/architecture.svg)
+![Architecture](https://raw.githubusercontent.com/coolJp9/cybershorts-bot/main/docs/architecture.svg)
 
 ---
 

@@ -3,7 +3,6 @@
 import logging
 import re
 from datetime import datetime
-from typing import Dict, List, Optional
 
 import requests
 
@@ -12,15 +11,14 @@ from app.config.settings import (
     OLLAMA_HOST,
     OLLAMA_MODEL,
     USED_FILE,
-    VIDEOS_PER_RUN,
 )
+from app.fetchers.aggregator import fetch_all_news
 from app.utils.deduplication import (
     completed_story_hashes,
     load_used_titles,
     mark_used_title,
     story_hash,
 )
-from app.fetchers.aggregator import fetch_all_news, fetch_article_text
 from app.utils.models import VideoJob, upsert_job
 
 log = logging.getLogger("CyberBot.selector")
@@ -29,13 +27,13 @@ log = logging.getLogger("CyberBot.selector")
 # ── Category tagging ───────────────────────────────────────────────────────────
 
 _CATEGORY_BUCKETS = [
-    ("ransomware",    ["ransomware", "extortion"]),
-    ("breach",        ["breach", "leak", "stolen", "exposed", "data"]),
+    ("ransomware", ["ransomware", "extortion"]),
+    ("breach", ["breach", "leak", "stolen", "exposed", "data"]),
     ("vulnerability", ["cve", "vulnerability", "zero-day", "exploit", "patch"]),
-    ("malware",       ["malware", "trojan", "botnet", "spyware", "backdoor"]),
-    ("privacy",       ["privacy", "surveillance", "whatsapp", "meta", "google"]),
-    ("ai_security",   ["ai", "llm", "model", "prompt"]),
-    ("defense",       ["security", "cybersecurity", "firewall", "encryption"]),
+    ("malware", ["malware", "trojan", "botnet", "spyware", "backdoor"]),
+    ("privacy", ["privacy", "surveillance", "whatsapp", "meta", "google"]),
+    ("ai_security", ["ai", "llm", "model", "prompt"]),
+    ("defense", ["security", "cybersecurity", "firewall", "encryption"]),
 ]
 
 
@@ -49,7 +47,7 @@ def story_category(title: str) -> str:
 
 # ── Heuristic scoring ──────────────────────────────────────────────────────────
 
-_SOURCE_BONUS: Dict[str, int] = {
+_SOURCE_BONUS: dict[str, int] = {
     "BleepingComputer": 20,
     "TheHackerNews": 18,
     "KrebsOnSecurity": 18,
@@ -75,7 +73,7 @@ _SOURCE_BONUS: Dict[str, int] = {
 _SEVERITY_WORDS = {"breach", "zero-day", "ransomware", "critical", "exploit"}
 
 
-def heuristic_story_score(story: Dict) -> int:
+def heuristic_story_score(story: dict) -> int:
     title = story.get("title", "")
     lower = title.lower()
     keyword_hits = sum(1 for kw in CYBER_KEYWORDS if kw in lower)
@@ -90,9 +88,9 @@ def heuristic_story_score(story: Dict) -> int:
     return keyword_hits * 5 + source_bonus + hn_score + recency_bonus + severity_bonus
 
 
-def dedupe_stories(stories: List[Dict]) -> List[Dict]:
+def dedupe_stories(stories: list[dict]) -> list[dict]:
     """Return one entry per title hash, keeping the highest-scored copy."""
-    best_by_hash: Dict[str, Dict] = {}
+    best_by_hash: dict[str, dict] = {}
     for story in stories:
         title = story.get("title", "").strip()
         if not title:
@@ -108,7 +106,8 @@ def dedupe_stories(stories: List[Dict]) -> List[Dict]:
 
 # ── AI batch planning ──────────────────────────────────────────────────────────
 
-def ai_plan_story_batch(stories: List[Dict], count: int) -> List[Dict]:
+
+def ai_plan_story_batch(stories: list[dict], count: int) -> list[dict]:
     """Ask the local LLM to curate a diverse batch; fall back to heuristics."""
     if not stories:
         return []
@@ -135,7 +134,7 @@ def ai_plan_story_batch(stories: List[Dict], count: int) -> List[Dict]:
         )
         r.raise_for_status()
         response = r.json().get("response", "")
-        picked: List[Dict] = []
+        picked: list[dict] = []
         seen = set()
         for raw in re.findall(r"\d+", response):
             idx = int(raw) - 1
@@ -151,8 +150,8 @@ def ai_plan_story_batch(stories: List[Dict], count: int) -> List[Dict]:
         log.warning("AI batch planning failed: %s", exc)
 
     # Heuristic fallback: at most 2 stories per category
-    selected: List[Dict] = []
-    used_categories: Dict[str, int] = {}
+    selected: list[dict] = []
+    used_categories: dict[str, int] = {}
     for story in candidates:
         cat = story.get("category", "general")
         if used_categories.get(cat, 0) >= 2 and len(selected) < count - 2:
@@ -174,13 +173,13 @@ def ai_plan_story_batch(stories: List[Dict], count: int) -> List[Dict]:
     return selected[:count]
 
 
-def ai_pick_best_story(stories: List[Dict]) -> Optional[Dict]:
+def ai_pick_best_story(stories: list[dict]) -> dict | None:
     """Ask the LLM to pick the single most impactful story."""
     if not stories:
         return None
     candidates = stories[:15]
     candidates_text = "\n".join(
-        f"{i+1}. [{s['source']}] {s['title']} (score: {s['score']})"
+        f"{i + 1}. [{s['source']}] {s['title']} (score: {s['score']})"
         for i, s in enumerate(candidates)
     )
     prompt = (
@@ -211,7 +210,8 @@ def ai_pick_best_story(stories: List[Dict]) -> Optional[Dict]:
 
 # ── Top-level entry points ─────────────────────────────────────────────────────
 
-def fetch_story() -> Optional[Dict]:
+
+def fetch_story() -> dict | None:
     """Fetch all news and return the best unused story."""
     log.info("Fetching news from all sources...")
     used_hashes = load_used_titles()
@@ -233,7 +233,7 @@ def fetch_story() -> Optional[Dict]:
     return story
 
 
-def plan_video_jobs(count: int) -> List[VideoJob]:
+def plan_video_jobs(count: int) -> list[VideoJob]:
     """Fetch once, filter already-seen stories, and create a planned batch of jobs."""
     log.info("Agent planner: fetching candidate stories for batch of %d...", count)
     used_hashes = load_used_titles() | completed_story_hashes()
@@ -248,7 +248,7 @@ def plan_video_jobs(count: int) -> List[VideoJob]:
 
     planned = ai_plan_story_batch(fresh, count)
     batch_id = datetime.now().strftime("%Y%m%d_%H%M%S")
-    jobs: List[VideoJob] = []
+    jobs: list[VideoJob] = []
     for idx, story in enumerate(planned, 1):
         title = story["title"]
         job = VideoJob(

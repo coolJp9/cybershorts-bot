@@ -4,8 +4,7 @@ import json
 import logging
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
-from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from app.config.settings import JOB_MEMORY_FILE
 
@@ -17,7 +16,7 @@ class VideoJob:
     """Represents one video creation task with full lifecycle state."""
 
     job_id: str
-    story: Dict[str, Any]
+    story: dict[str, Any]
     status: str = "planned"
     created_at: str = field(default_factory=lambda: datetime.now().isoformat(timespec="seconds"))
     updated_at: str = field(default_factory=lambda: datetime.now().isoformat(timespec="seconds"))
@@ -28,16 +27,16 @@ class VideoJob:
     script: str = ""
     script_score: int = 0
     script_review: str = ""
-    search_terms: List[str] = field(default_factory=list)
+    search_terms: list[str] = field(default_factory=list)
     voice_path: str = ""
     raw_video_path: str = ""
     final_video_path: str = ""
     scheduled_for: str = ""
     uploaded: bool = False
     upload_skipped: bool = False
-    errors: List[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
 
-    def touch(self, status: Optional[str] = None) -> None:
+    def touch(self, status: str | None = None) -> None:
         if status:
             self.status = status
         self.updated_at = datetime.now().isoformat(timespec="seconds")
@@ -48,14 +47,15 @@ class VideoJob:
         log.warning("Job %s failed: %s", self.job_id, message)
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "VideoJob":
+    def from_dict(cls, data: dict[str, Any]) -> "VideoJob":
         known = {f.name for f in cls.__dataclass_fields__.values()}
         return cls(**{k: v for k, v in data.items() if k in known})
 
 
 # ── Job memory persistence ─────────────────────────────────────────────────────
 
-def load_job_memory() -> List[Dict[str, Any]]:
+
+def load_job_memory() -> list[dict[str, Any]]:
     if not JOB_MEMORY_FILE.exists():
         return []
     try:
@@ -67,7 +67,7 @@ def load_job_memory() -> List[Dict[str, Any]]:
     return []
 
 
-def save_job_memory(jobs: List[Dict[str, Any]]) -> None:
+def save_job_memory(jobs: list[dict[str, Any]]) -> None:
     try:
         JOB_MEMORY_FILE.write_text(
             json.dumps(jobs[-300:], indent=2, ensure_ascii=False),

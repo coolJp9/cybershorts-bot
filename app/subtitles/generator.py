@@ -6,10 +6,8 @@ FFmpeg video assembly step (burn-in captions or sidecar .srt files).
 """
 
 import logging
-import math
 import re
 from pathlib import Path
-from typing import List, Tuple
 
 log = logging.getLogger("CyberBot.subtitles")
 
@@ -18,10 +16,10 @@ _CHARS_PER_SECOND: float = 14.0
 _MAX_LINE_CHARS: int = 42
 
 
-def _chunk_text(text: str, max_chars: int = _MAX_LINE_CHARS) -> List[str]:
+def _chunk_text(text: str, max_chars: int = _MAX_LINE_CHARS) -> list[str]:
     """Split *text* into short segments suitable for subtitle lines."""
     sentences = re.split(r"(?<=[.!?])\s+", text.strip())
-    chunks: List[str] = []
+    chunks: list[str] = []
     current = ""
     for sentence in sentences:
         words = sentence.split()
@@ -53,7 +51,7 @@ def generate_srt(script: str, audio_duration: float) -> str:
         return ""
 
     time_per_char = audio_duration / max(sum(len(c) for c in chunks), 1)
-    srt_lines: List[str] = []
+    srt_lines: list[str] = []
     index = 1
     elapsed = 0.0
 
@@ -62,9 +60,7 @@ def generate_srt(script: str, audio_duration: float) -> str:
         start = elapsed
         end = min(elapsed + duration, audio_duration)
         srt_lines.append(
-            f"{index}\n"
-            f"{_format_srt_time(start)} --> {_format_srt_time(end)}\n"
-            f"{chunk}\n"
+            f"{index}\n{_format_srt_time(start)} --> {_format_srt_time(end)}\n{chunk}\n"
         )
         elapsed = end
         index += 1

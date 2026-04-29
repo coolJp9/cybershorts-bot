@@ -4,14 +4,13 @@ import logging
 import os
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import List
 
 from app.config.settings import OUTPUT_DIR
 
 log = logging.getLogger("CyberBot.cleanup")
 
 
-def cleanup_video_files(video_files: List[str]) -> None:
+def cleanup_video_files(video_files: list[str]) -> None:
     """Delete specific files produced during a single video job."""
     for f in video_files:
         path = Path(f)

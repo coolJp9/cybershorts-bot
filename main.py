@@ -20,16 +20,12 @@ Usage examples
 """
 
 import argparse
-import asyncio
-import logging
 import subprocess
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import List, Tuple
 
 from app.config.settings import (
-    CREDENTIALS_FILE,
     GEMINI_API_KEY,
     OLLAMA_HOST,
     OLLAMA_MODEL,
@@ -54,7 +50,6 @@ from app.uploader.youtube import (
     check_quota_cooldown,
     check_token_expiry,
     get_youtube_credentials,
-    set_quota_cooldown,
     upload_youtube_scheduled,
 )
 from app.utils.cleanup import cleanup_output_dir, cleanup_video_files
@@ -62,9 +57,9 @@ from app.utils.deduplication import mark_used_title
 from app.utils.models import VideoJob, upsert_job
 from app.video_engine.assembler import (
     assemble_video,
+    download_file,
     get_audio_duration,
     get_stock_video,
-    download_file,
 )
 
 log = configure_logging("CyberBot")
@@ -74,11 +69,12 @@ FALLBACK_TERMS = ["digital lock encryption", "server rack data center", "binary 
 
 # ── Schedule helpers ───────────────────────────────────────────────────────────
 
-def build_schedule_datetimes(count: int) -> List[datetime]:
+
+def build_schedule_datetimes(count: int) -> list[datetime]:
     """Return a list of future IST datetimes for publishing the batch."""
     now_ist = datetime.now()
     today = now_ist.date()
-    slots: List[datetime] = []
+    slots: list[datetime] = []
     for time_str in SCHEDULE_TIMES:
         hour, minute = map(int, time_str.split(":"))
         scheduled = datetime(today.year, today.month, today.day, hour, minute)
@@ -94,16 +90,15 @@ def build_schedule_datetimes(count: int) -> List[datetime]:
 
 # ── Single-job processor ───────────────────────────────────────────────────────
 
-def process_video_job(
-    job: VideoJob, index: int, total: int, ts: str
-) -> Tuple[bool, List[str]]:
+
+def process_video_job(job: VideoJob, index: int, total: int, ts: str) -> tuple[bool, list[str]]:
     """Execute all creation stages for one planned job.
 
     Returns (success, list_of_intermediate_files_to_clean).
     """
     story = job.story
     title = story["title"]
-    cleanup_files: List[str] = []
+    cleanup_files: list[str] = []
 
     log.info("")
     log.info("=" * 40)
@@ -202,6 +197,7 @@ def process_video_job(
 
 # ── Main pipeline ──────────────────────────────────────────────────────────────
 
+
 def run(plan_only: bool = False, create_only: bool = False) -> bool:
     """Plan a batch of videos, create them, and optionally upload."""
     log.info("=" * 60)
@@ -222,7 +218,9 @@ def run(plan_only: bool = False, create_only: bool = False) -> bool:
     jobs = plan_video_jobs(VIDEOS_PER_RUN)
     if plan_only:
         for idx, job in enumerate(jobs, 1):
-            log.info("PLAN %d: [%s] score=%d %s", idx, job.category, job.score, job.story.get("title"))
+            log.info(
+                "PLAN %d: [%s] score=%d %s", idx, job.category, job.score, job.story.get("title")
+            )
         return bool(jobs)
 
     if not jobs:
@@ -304,10 +302,13 @@ def run_upload_only() -> bool:
 
     can_upload, cooldown_until = check_quota_cooldown()
     if not can_upload:
-        log.error("Quota cooldown active until %s — aborting", cooldown_until.strftime("%Y-%m-%d %H:%M"))
+        log.error(
+            "Quota cooldown active until %s — aborting", cooldown_until.strftime("%Y-%m-%d %H:%M")
+        )
         return False
 
     from app.utils.models import load_job_memory
+
     jobs_raw = load_job_memory()
     pending = [
         VideoJob.from_dict(j)
@@ -362,11 +363,14 @@ def run_legacy() -> bool:
 
     can_upload, cooldown_until = check_quota_cooldown()
     if not can_upload:
-        log.warning("Quota cooldown until %s — uploads will be skipped", cooldown_until.strftime("%Y-%m-%d %H:%M"))
+        log.warning(
+            "Quota cooldown until %s — uploads will be skipped",
+            cooldown_until.strftime("%Y-%m-%d %H:%M"),
+        )
 
     base_ts = datetime.now().strftime("%Y%m%d_%H%M%S")
     now_ist = datetime.now()
-    today = now_ist.date()
+    now_ist.date()
     schedule_slots = build_schedule_datetimes(VIDEOS_PER_RUN)
     success_count = upload_count = 0
     quota_exceeded = False
@@ -374,7 +378,7 @@ def run_legacy() -> bool:
     for i in range(VIDEOS_PER_RUN):
         log.info("\n%s\nLEGACY VIDEO %d OF %d\n%s", "=" * 40, i + 1, VIDEOS_PER_RUN, "=" * 40)
         ts = f"{base_ts}_{i + 1}"
-        cleanup_files: List[str] = []
+        cleanup_files: list[str] = []
 
         story = fetch_story()
         if not story:
@@ -402,7 +406,9 @@ def run_legacy() -> bool:
             download_file(video_url, raw_video)
 
         final_path = str(OUTPUT_DIR / f"cyber_short_{ts}.mp4")
-        if not assemble_video(raw_video if Path(raw_video).exists() else None, voice_path, final_path):
+        if not assemble_video(
+            raw_video if Path(raw_video).exists() else None, voice_path, final_path
+        ):
             log.error("Video %d: assembly failed", i + 1)
             cleanup_video_files(cleanup_files)
             continue
@@ -428,26 +434,40 @@ def run_legacy() -> bool:
         if i < VIDEOS_PER_RUN - 1:
             time.sleep(10)
 
-    log.info("Legacy run complete — created %d/%d, uploaded %d", success_count, VIDEOS_PER_RUN, upload_count)
+    log.info(
+        "Legacy run complete — created %d/%d, uploaded %d",
+        success_count,
+        VIDEOS_PER_RUN,
+        upload_count,
+    )
     return success_count > 0
 
 
 # ── CLI ────────────────────────────────────────────────────────────────────────
 
+
 def _build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         description="CyberShorts Bot v7 — autonomous cybersecurity Shorts creator"
     )
-    p.add_argument("--mode", choices=["once", "loop"], default="once",
-                   help="once = single run | loop = run every 24 hours")
+    p.add_argument(
+        "--mode",
+        choices=["once", "loop"],
+        default="once",
+        help="once = single run | loop = run every 24 hours",
+    )
     p.add_argument("--setup", action="store_true", help="Install runtime dependencies")
     p.add_argument("--verify", metavar="VIDEO", help="Check audio stream in a video file")
     p.add_argument("--check-token", action="store_true", help="Show YouTube token status")
     p.add_argument("--refresh-token", action="store_true", help="Force re-authentication")
     p.add_argument("--check-quota", action="store_true", help="Show YouTube quota cooldown status")
-    p.add_argument("--clear-quota", action="store_true", help="Clear quota cooldown (use carefully)")
+    p.add_argument(
+        "--clear-quota", action="store_true", help="Clear quota cooldown (use carefully)"
+    )
     p.add_argument("--cleanup", action="store_true", help="Purge old output files")
-    p.add_argument("--plan-only", action="store_true", help="Score stories only; do not create videos")
+    p.add_argument(
+        "--plan-only", action="store_true", help="Score stories only; do not create videos"
+    )
     p.add_argument("--create-only", action="store_true", help="Create videos; skip YouTube upload")
     p.add_argument("--upload-only", action="store_true", help="Upload locally saved videos")
     p.add_argument("--legacy-run", action="store_true", help="Run the old single-story pipeline")
@@ -459,15 +479,26 @@ def main() -> None:
 
     if args.setup:
         log.info("Installing runtime dependencies...")
-        subprocess.run([
-            "pip", "install",
-            "requests", "edge-tts", "python-dotenv", "pyttsx3",
-            "google-api-python-client", "google-auth-oauthlib",
-        ], check=False)
-        log.info("Dependencies installed. Create a .env file with your API keys (see .env.example).")
+        subprocess.run(
+            [
+                "pip",
+                "install",
+                "requests",
+                "edge-tts",
+                "python-dotenv",
+                "pyttsx3",
+                "google-api-python-client",
+                "google-auth-oauthlib",
+            ],
+            check=False,
+        )
+        log.info(
+            "Dependencies installed. Create a .env file with your API keys (see .env.example)."
+        )
 
     elif args.verify:
         from app.video_engine.assembler import _verify_audio_stream
+
         _verify_audio_stream(args.verify)
 
     elif args.check_token:

@@ -2,20 +2,18 @@
 
 import logging
 import re
-from typing import Dict, List, Optional
 
 import requests
 
-from app.config.settings import CYBER_KEYWORDS
 from app.fetchers.hackernews import fetch_algolia_hackernews, fetch_hackernews_top
 from app.fetchers.rss import fetch_rss_news
 
 log = logging.getLogger("CyberBot.aggregator")
 
 
-def fetch_all_news() -> List[Dict]:
+def fetch_all_news() -> list[dict]:
     """Return the combined raw story list from every configured source."""
-    stories: List[Dict] = []
+    stories: list[dict] = []
     stories.extend(fetch_rss_news())
     stories.extend(fetch_hackernews_top())
     stories.extend(fetch_algolia_hackernews())

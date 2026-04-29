@@ -2,7 +2,8 @@
 
 import logging
 import time
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from typing import Any
 
 from app.config.settings import NETWORK_RETRIES
 
@@ -19,7 +20,7 @@ def retry_call(
 
     Raises the last exception if every attempt fails.
     """
-    last_error: Optional[Exception] = None
+    last_error: Exception | None = None
     for attempt in range(1, max(1, attempts) + 1):
         try:
             return fn()
@@ -27,8 +28,14 @@ def retry_call(
             last_error = exc
             if attempt < attempts:
                 wait = delay * attempt
-                log.warning("%s failed (attempt %d/%d): %s — retrying in %.1fs",
-                            name, attempt, attempts, exc, wait)
+                log.warning(
+                    "%s failed (attempt %d/%d): %s — retrying in %.1fs",
+                    name,
+                    attempt,
+                    attempts,
+                    exc,
+                    wait,
+                )
                 time.sleep(wait)
             else:
                 log.warning("%s failed after %d attempts: %s", name, attempts, exc)

@@ -5,7 +5,6 @@ import os
 import random
 import subprocess
 from pathlib import Path
-from typing import List, Optional
 
 import requests
 
@@ -16,7 +15,8 @@ log = logging.getLogger("CyberBot.video")
 
 # ── Stock footage ──────────────────────────────────────────────────────────────
 
-def get_stock_video(search_terms: List[str]) -> Optional[str]:
+
+def get_stock_video(search_terms: list[str]) -> str | None:
     """Return a direct MP4 download URL from Pexels, or None if nothing matches."""
     if not PEXELS_API_KEY:
         log.warning("PEXELS_API_KEY not set — no footage")
@@ -66,17 +66,24 @@ def download_file(url: str, dest: str) -> bool:
 
 # ── FFmpeg helpers ─────────────────────────────────────────────────────────────
 
+
 def get_audio_duration(audio_path: str) -> float:
     """Return audio duration in seconds via ffprobe, defaulting to 60.0."""
     try:
         result = subprocess.run(
             [
-                "ffprobe", "-v", "error",
-                "-show_entries", "format=duration",
-                "-of", "default=noprint_wrappers=1:nokey=1",
+                "ffprobe",
+                "-v",
+                "error",
+                "-show_entries",
+                "format=duration",
+                "-of",
+                "default=noprint_wrappers=1:nokey=1",
                 audio_path,
             ],
-            capture_output=True, text=True, timeout=15,
+            capture_output=True,
+            text=True,
+            timeout=15,
         )
         dur = float(result.stdout.strip())
         log.info("Audio duration: %.2fs", dur)
@@ -93,13 +100,20 @@ def is_valid_video(file_path: str) -> bool:
     try:
         result = subprocess.run(
             [
-                "ffprobe", "-v", "error",
-                "-select_streams", "v:0",
-                "-show_entries", "stream=codec_type",
-                "-of", "default=noprint_wrappers=1:nokey=1",
+                "ffprobe",
+                "-v",
+                "error",
+                "-select_streams",
+                "v:0",
+                "-show_entries",
+                "stream=codec_type",
+                "-of",
+                "default=noprint_wrappers=1:nokey=1",
                 file_path,
             ],
-            capture_output=True, text=True, timeout=10,
+            capture_output=True,
+            text=True,
+            timeout=10,
         )
         return result.returncode == 0 and "video" in result.stdout.lower()
     except Exception:
@@ -111,12 +125,24 @@ def reencode_video(input_path: str, output_path: str) -> bool:
     try:
         subprocess.run(
             [
-                "ffmpeg", "-y", "-i", input_path,
-                "-c:v", "libx264", "-preset", "fast", "-crf", "23",
-                "-vf", "fps=30", "-an",
+                "ffmpeg",
+                "-y",
+                "-i",
+                input_path,
+                "-c:v",
+                "libx264",
+                "-preset",
+                "fast",
+                "-crf",
+                "23",
+                "-vf",
+                "fps=30",
+                "-an",
                 output_path,
             ],
-            check=True, timeout=60, capture_output=True,
+            check=True,
+            timeout=60,
+            capture_output=True,
         )
         log.info("Re-encoded video: %s", output_path)
         return True
@@ -129,13 +155,20 @@ def _verify_audio_stream(video_path: str) -> None:
     try:
         res = subprocess.run(
             [
-                "ffprobe", "-v", "error",
-                "-select_streams", "a",
-                "-show_entries", "stream=codec_name",
-                "-of", "default=noprint_wrappers=1",
+                "ffprobe",
+                "-v",
+                "error",
+                "-select_streams",
+                "a",
+                "-show_entries",
+                "stream=codec_name",
+                "-of",
+                "default=noprint_wrappers=1",
                 video_path,
             ],
-            capture_output=True, text=True, timeout=15,
+            capture_output=True,
+            text=True,
+            timeout=15,
         )
         if res.stdout.strip():
             log.info("Audio stream verified in output")
@@ -145,43 +178,83 @@ def _verify_audio_stream(video_path: str) -> None:
         log.warning("Audio verification failed: %s", exc)
 
 
-def _build_stock_cmd(
-    video_path: str, audio_path: str, audio_dur: float, output_path: str
-) -> list:
+def _build_stock_cmd(video_path: str, audio_path: str, audio_dur: float, output_path: str) -> list:
     return [
-        "ffmpeg", "-y",
-        "-i", video_path,
-        "-i", audio_path,
-        "-map", "0:v:0",
-        "-map", "1:a:0",
-        "-vf", f"scale={VIDEO_WIDTH}:{VIDEO_HEIGHT}:force_original_aspect_ratio=increase,crop={VIDEO_WIDTH}:{VIDEO_HEIGHT}",
-        "-t", str(audio_dur),
-        "-c:v", "libx264", "-preset", "fast", "-crf", "23",
-        "-c:a", "aac", "-b:a", "192k", "-ar", "44100", "-ac", "2",
-        "-r", "30", "-movflags", "+faststart",
+        "ffmpeg",
+        "-y",
+        "-i",
+        video_path,
+        "-i",
+        audio_path,
+        "-map",
+        "0:v:0",
+        "-map",
+        "1:a:0",
+        "-vf",
+        f"scale={VIDEO_WIDTH}:{VIDEO_HEIGHT}:force_original_aspect_ratio=increase,crop={VIDEO_WIDTH}:{VIDEO_HEIGHT}",
+        "-t",
+        str(audio_dur),
+        "-c:v",
+        "libx264",
+        "-preset",
+        "fast",
+        "-crf",
+        "23",
+        "-c:a",
+        "aac",
+        "-b:a",
+        "192k",
+        "-ar",
+        "44100",
+        "-ac",
+        "2",
+        "-r",
+        "30",
+        "-movflags",
+        "+faststart",
         output_path,
     ]
 
 
 def _build_fallback_cmd(audio_path: str, audio_dur: float, output_path: str) -> list:
     return [
-        "ffmpeg", "-y",
-        "-f", "lavfi",
-        "-i", f"color=c=0x0a0a0a:s={VIDEO_WIDTH}x{VIDEO_HEIGHT}:d={int(audio_dur)+2}",
-        "-i", audio_path,
-        "-map", "0:v:0",
-        "-map", "1:a:0",
-        "-t", str(audio_dur),
-        "-c:v", "libx264", "-preset", "fast", "-crf", "23",
-        "-c:a", "aac", "-b:a", "192k", "-ar", "44100", "-ac", "2",
-        "-r", "30", "-movflags", "+faststart",
+        "ffmpeg",
+        "-y",
+        "-f",
+        "lavfi",
+        "-i",
+        f"color=c=0x0a0a0a:s={VIDEO_WIDTH}x{VIDEO_HEIGHT}:d={int(audio_dur) + 2}",
+        "-i",
+        audio_path,
+        "-map",
+        "0:v:0",
+        "-map",
+        "1:a:0",
+        "-t",
+        str(audio_dur),
+        "-c:v",
+        "libx264",
+        "-preset",
+        "fast",
+        "-crf",
+        "23",
+        "-c:a",
+        "aac",
+        "-b:a",
+        "192k",
+        "-ar",
+        "44100",
+        "-ac",
+        "2",
+        "-r",
+        "30",
+        "-movflags",
+        "+faststart",
         output_path,
     ]
 
 
-def assemble_video(
-    video_path: Optional[str], audio_path: str, output_path: str
-) -> bool:
+def assemble_video(video_path: str | None, audio_path: str, output_path: str) -> bool:
     """Combine stock footage (or colour fill) with TTS audio into a final MP4."""
     log.info("Assembling video with FFmpeg...")
     try:
@@ -196,9 +269,19 @@ def assemble_video(
     if video_path and is_valid_video(video_path):
         try:
             res = subprocess.run(
-                ["ffprobe", "-v", "error", "-show_entries", "format=duration",
-                 "-of", "default=noprint_wrappers=1:nokey=1", video_path],
-                capture_output=True, text=True, timeout=10,
+                [
+                    "ffprobe",
+                    "-v",
+                    "error",
+                    "-show_entries",
+                    "format=duration",
+                    "-of",
+                    "default=noprint_wrappers=1:nokey=1",
+                    video_path,
+                ],
+                capture_output=True,
+                text=True,
+                timeout=10,
             )
             vid_dur = float(res.stdout.strip()) if res.stdout.strip() else 0
             valid_video = vid_dur >= 0.5

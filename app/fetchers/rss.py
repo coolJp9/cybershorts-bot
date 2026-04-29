@@ -2,9 +2,8 @@
 
 import logging
 import xml.etree.ElementTree as ET
-from email.utils import parsedate_to_datetime
 from datetime import datetime
-from typing import Dict, List, Optional
+from email.utils import parsedate_to_datetime
 
 import requests
 
@@ -22,7 +21,7 @@ _HEADERS = {
 }
 
 
-def _xml_text(node: Optional[ET.Element], tag_names: List[str]) -> str:
+def _xml_text(node: ET.Element | None, tag_names: list[str]) -> str:
     """Return the first non-empty text found among *tag_names*, namespace-agnostic."""
     if node is None:
         return ""
@@ -64,9 +63,9 @@ def _parse_feed_time(raw_value: str) -> int:
         return 0
 
 
-def fetch_rss_news() -> List[Dict]:
+def fetch_rss_news() -> list[dict]:
     """Return cybersecurity stories scraped from all configured RSS/Atom sources."""
-    stories: List[Dict] = []
+    stories: list[dict] = []
     for source in RSS_NEWS_SOURCES:
         try:
             response = requests.get(source["url"], headers=_HEADERS, timeout=12)
@@ -84,13 +83,15 @@ def fetch_rss_news() -> List[Dict]:
                 haystack = f"{title} {summary}".lower()
                 if not any(kw in haystack for kw in CYBER_KEYWORDS):
                     continue
-                stories.append({
-                    "source": source["name"],
-                    "title": title,
-                    "url": link,
-                    "score": source["score"],
-                    "time": _parse_feed_time(published),
-                })
+                stories.append(
+                    {
+                        "source": source["name"],
+                        "title": title,
+                        "url": link,
+                        "score": source["score"],
+                        "time": _parse_feed_time(published),
+                    }
+                )
                 picked += 1
                 if picked >= RSS_STORIES_PER_SOURCE:
                     break

@@ -1,12 +1,9 @@
 """Tests for script generation and normalisation."""
 
-import pytest
-from unittest.mock import patch, MagicMock
-
 from app.script_generator.generator import (
-    normalize_script,
-    heuristic_script_review,
     _static_script,
+    heuristic_script_review,
+    normalize_script,
 )
 
 
@@ -29,7 +26,9 @@ class TestNormalizeScript:
         assert "Follow for daily cyber updates" in result
 
     def test_strips_label_prefix(self):
-        result = normalize_script("Script: BREAKING: important news. Follow for daily cyber updates")
+        result = normalize_script(
+            "Script: BREAKING: important news. Follow for daily cyber updates"
+        )
         assert not result.lower().startswith("script:")
 
     def test_truncates_long_scripts(self):

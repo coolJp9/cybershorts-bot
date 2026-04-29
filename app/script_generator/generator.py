@@ -6,7 +6,6 @@ import json
 import logging
 import random
 import re
-from typing import Dict, List, Optional, Tuple
 
 import requests
 
@@ -37,7 +36,8 @@ _SCRIPT_PROMPT = (
 
 # ── Raw script generation ──────────────────────────────────────────────────────
 
-def _ollama_script(title: str, context: str) -> Optional[str]:
+
+def _ollama_script(title: str, context: str) -> str | None:
     log.info("Generating script with Ollama (%s)...", OLLAMA_MODEL)
     try:
         r = requests.post(
@@ -60,7 +60,7 @@ def _ollama_script(title: str, context: str) -> Optional[str]:
     return None
 
 
-def _gemini_script(title: str, context: str) -> Optional[str]:
+def _gemini_script(title: str, context: str) -> str | None:
     if not GEMINI_API_KEY:
         return None
     log.info("Generating script with Gemini (fallback)...")
@@ -69,9 +69,9 @@ def _gemini_script(title: str, context: str) -> Optional[str]:
             "https://generativelanguage.googleapis.com/v1beta/models/"
             f"gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}",
             json={
-                "contents": [{
-                    "parts": [{"text": _SCRIPT_PROMPT.format(title=title, context=context[:400])}]
-                }]
+                "contents": [
+                    {"parts": [{"text": _SCRIPT_PROMPT.format(title=title, context=context[:400])}]}
+                ]
             },
             timeout=30,
         )
@@ -101,6 +101,7 @@ def generate_script(title: str, context: str) -> str:
 
 # ── Script normalisation ───────────────────────────────────────────────────────
 
+
 def normalize_script(text: str) -> str:
     """Enforce channel rules: hook prefix and CTA suffix."""
     text = re.sub(r"^\s*(script|voiceover|caption)\s*:\s*", "", text.strip(), flags=re.I)
@@ -117,7 +118,8 @@ def normalize_script(text: str) -> str:
 
 # ── Script quality review ──────────────────────────────────────────────────────
 
-def heuristic_script_review(script: str, title: str, _context: str) -> Dict:
+
+def heuristic_script_review(script: str, title: str, _context: str) -> dict:
     """Score a script locally without needing a model."""
     score = 10
     issues = []
@@ -145,7 +147,7 @@ def heuristic_script_review(script: str, title: str, _context: str) -> Dict:
     }
 
 
-def ai_review_script(script: str, title: str, context: str) -> Dict:
+def ai_review_script(script: str, title: str, context: str) -> dict:
     """Ask the LLM to critique the script; fall back to heuristics on failure."""
     prompt = (
         "You are a strict cybersecurity Shorts editor.\n"
@@ -174,10 +176,10 @@ def ai_review_script(script: str, title: str, context: str) -> Dict:
         return heuristic_script_review(script, title, context)
 
 
-def generate_script_with_review(title: str, context: str) -> Tuple[str, Dict]:
+def generate_script_with_review(title: str, context: str) -> tuple[str, dict]:
     """Generate, self-critique, and if necessary revise before accepting a script."""
     best_script = ""
-    best_review: Dict = {"score": 0, "approved": False, "reason": "not generated"}
+    best_review: dict = {"score": 0, "approved": False, "reason": "not generated"}
     revision_context = context
 
     for attempt in range(1, SCRIPT_RETRY_ATTEMPTS + 2):
@@ -185,7 +187,10 @@ def generate_script_with_review(title: str, context: str) -> Tuple[str, Dict]:
         review = ai_review_script(script, title, context)
         log.info(
             "Script review attempt %d: score=%d approved=%s reason=%s",
-            attempt, review["score"], review["approved"], review["reason"],
+            attempt,
+            review["score"],
+            review["approved"],
+            review["reason"],
         )
         if review["score"] > best_review["score"]:
             best_script, best_review = script, review
@@ -202,7 +207,8 @@ def generate_script_with_review(title: str, context: str) -> Tuple[str, Dict]:
 
 # ── AI-generated video search terms ───────────────────────────────────────────
 
-def ai_generate_search_terms(title: str, context: str = "") -> List[str]:
+
+def ai_generate_search_terms(title: str, context: str = "") -> list[str]:
     """Use the LLM to generate 2-3 faceless stock-video search queries."""
     prompt = (
         "Given this cybersecurity news headline, generate 2-3 short search queries "

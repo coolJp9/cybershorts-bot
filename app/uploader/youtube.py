@@ -3,8 +3,6 @@
 import json
 import logging
 from datetime import datetime, timedelta
-from pathlib import Path
-from typing import Dict, Optional, Tuple
 
 from app.config.settings import CREDENTIALS_FILE, QUOTA_STATE_FILE, TOKEN_FILE
 
@@ -15,7 +13,8 @@ _SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
 
 # ── Quota cooldown ─────────────────────────────────────────────────────────────
 
-def check_quota_cooldown() -> Tuple[bool, Optional[datetime]]:
+
+def check_quota_cooldown() -> tuple[bool, datetime | None]:
     """Return (can_upload, cooldown_ends_at). Clears expired cooldown files."""
     if not QUOTA_STATE_FILE.exists():
         return True, None
@@ -47,6 +46,7 @@ def set_quota_cooldown(hours: int = 24) -> None:
 
 
 # ── OAuth2 credential management ───────────────────────────────────────────────
+
 
 def get_youtube_credentials():
     """Load, refresh, or obtain fresh YouTube OAuth2 credentials."""
@@ -115,9 +115,9 @@ def get_youtube_credentials():
     return creds
 
 
-def check_token_expiry() -> Dict:
+def check_token_expiry() -> dict:
     """Return a status dictionary about the current token file."""
-    info: Dict = {
+    info: dict = {
         "exists": TOKEN_FILE.exists(),
         "valid": False,
         "expires_at": None,
@@ -145,12 +145,13 @@ def check_token_expiry() -> Dict:
 
 # ── Upload ─────────────────────────────────────────────────────────────────────
 
+
 def upload_youtube_scheduled(
     video_path: str,
     title: str,
     description: str,
     publish_time: datetime,
-) -> Tuple[bool, bool]:
+) -> tuple[bool, bool]:
     """Upload a video to YouTube with a scheduled publish time.
 
     Returns:
@@ -171,7 +172,6 @@ def upload_youtube_scheduled(
 
     try:
         from googleapiclient.discovery import build
-        from googleapiclient.errors import HttpError
         from googleapiclient.http import MediaFileUpload
 
         creds = get_youtube_credentials()
@@ -212,7 +212,8 @@ def upload_youtube_scheduled(
         vid_id = response.get("id", "unknown")
         log.info(
             "Scheduled → https://youtu.be/%s (live %s IST)",
-            vid_id, publish_time.strftime("%Y-%m-%d %H:%M"),
+            vid_id,
+            publish_time.strftime("%Y-%m-%d %H:%M"),
         )
         return True, False
 
@@ -221,6 +222,7 @@ def upload_youtube_scheduled(
         error_reason = ""
         try:
             from googleapiclient.errors import HttpError as _HttpError
+
             if isinstance(exc, _HttpError):
                 error_details = json.loads(exc.content.decode())
                 error_reason = (

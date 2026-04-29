@@ -1,8 +1,6 @@
 """Fetch cybersecurity stories from Hacker News (Firebase API + Algolia search)."""
 
 import logging
-import xml.etree.ElementTree as ET
-from typing import Dict, List
 
 import requests
 
@@ -11,9 +9,9 @@ from app.config.settings import CYBER_KEYWORDS
 log = logging.getLogger("CyberBot.hackernews")
 
 
-def fetch_hackernews_top() -> List[Dict]:
+def fetch_hackernews_top() -> list[dict]:
     """Return cybersecurity-relevant stories from the HN top-stories list."""
-    stories: List[Dict] = []
+    stories: list[dict] = []
     try:
         ids = requests.get(
             "https://hacker-news.firebaseio.com/v0/topstories.json", timeout=10
@@ -27,13 +25,15 @@ def fetch_hackernews_top() -> List[Dict]:
                     continue
                 title = s.get("title", "")
                 if any(kw in title.lower() for kw in CYBER_KEYWORDS):
-                    stories.append({
-                        "source": "HackerNews",
-                        "title": title,
-                        "url": s.get("url", ""),
-                        "score": s.get("score", 0),
-                        "time": s.get("time", 0),
-                    })
+                    stories.append(
+                        {
+                            "source": "HackerNews",
+                            "title": title,
+                            "url": s.get("url", ""),
+                            "score": s.get("score", 0),
+                            "time": s.get("time", 0),
+                        }
+                    )
             except Exception:
                 continue
     except Exception as exc:
@@ -42,26 +42,25 @@ def fetch_hackernews_top() -> List[Dict]:
     return stories
 
 
-def fetch_algolia_hackernews(query: str = "cybersecurity") -> List[Dict]:
+def fetch_algolia_hackernews(query: str = "cybersecurity") -> list[dict]:
     """Search HN via the Algolia API for recent cyber news."""
-    stories: List[Dict] = []
+    stories: list[dict] = []
     try:
-        url = (
-            f"https://hn.algolia.com/api/v1/search"
-            f"?query={query}&tags=story&hitsPerPage=20"
-        )
+        url = f"https://hn.algolia.com/api/v1/search?query={query}&tags=story&hitsPerPage=20"
         data = requests.get(url, timeout=10).json()
         for hit in data.get("hits", []):
             title = hit.get("title", "")
             if not title:
                 continue
-            stories.append({
-                "source": "AlgoliaHN",
-                "title": title,
-                "url": hit.get("url", ""),
-                "score": hit.get("points", 20),
-                "time": hit.get("created_at_i", 0),
-            })
+            stories.append(
+                {
+                    "source": "AlgoliaHN",
+                    "title": title,
+                    "url": hit.get("url", ""),
+                    "score": hit.get("points", 20),
+                    "time": hit.get("created_at_i", 0),
+                }
+            )
     except Exception as exc:
         log.warning("Algolia fetch failed: %s", exc)
     log.info("Algolia returned %d stories", len(stories))

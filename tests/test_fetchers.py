@@ -1,13 +1,10 @@
 """Tests for fetcher modules."""
 
-import pytest
-from unittest.mock import patch, MagicMock
-
-from app.fetchers.rss import _parse_feed_time, _xml_text
+from app.fetchers.rss import _parse_feed_time
 from app.summarizer.story_selector import (
-    story_category,
-    heuristic_story_score,
     dedupe_stories,
+    heuristic_story_score,
+    story_category,
 )
 
 
@@ -84,7 +81,9 @@ class TestDedupeStories:
         assert result[0]["source"] == "BleepingComputer"
 
     def test_adds_agent_score_and_category(self):
-        stories = [{"source": "HackerNews", "title": "ransomware hits hospital", "score": 50, "time": 0}]
+        stories = [
+            {"source": "HackerNews", "title": "ransomware hits hospital", "score": 50, "time": 0}
+        ]
         result = dedupe_stories(stories)
         assert "agent_score" in result[0]
         assert "category" in result[0]

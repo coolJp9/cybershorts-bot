@@ -1,0 +1,141 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 900" width="700" height="900" font-family="'Segoe UI', Arial, sans-serif">
+  <!-- Background -->
+  <rect width="700" height="900" fill="#0d1117" rx="12"/>
+
+  <!-- Title -->
+  <text x="350" y="40" text-anchor="middle" fill="#58a6ff" font-size="20" font-weight="bold">CyberShorts Bot — Pipeline Architecture</text>
+
+  <!-- Helper: arrow marker -->
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#30363d"/>
+    </marker>
+    <marker id="arrow-blue" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#58a6ff"/>
+    </marker>
+  </defs>
+
+  <!-- ── ROW 1: News Sources ──────────────────────────────────────── -->
+  <g transform="translate(50, 65)">
+    <!-- Box group label -->
+    <rect x="0" y="0" width="600" height="60" rx="8" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+    <text x="300" y="20" text-anchor="middle" fill="#8b949e" font-size="11">News Sources</text>
+    <!-- Source chips -->
+    <rect x="20" y="28" width="120" height="22" rx="5" fill="#1f2937"/>
+    <text x="80" y="43" text-anchor="middle" fill="#d2a679" font-size="11">RSS Feeds (19)</text>
+    <rect x="155" y="28" width="120" height="22" rx="5" fill="#1f2937"/>
+    <text x="215" y="43" text-anchor="middle" fill="#d2a679" font-size="11">Hacker News</text>
+    <rect x="290" y="28" width="120" height="22" rx="5" fill="#1f2937"/>
+    <text x="350" y="43" text-anchor="middle" fill="#d2a679" font-size="11">Algolia HN</text>
+    <rect x="425" y="28" width="150" height="22" rx="5" fill="#1f2937"/>
+    <text x="500" y="43" text-anchor="middle" fill="#d2a679" font-size="11">(future sources)</text>
+  </g>
+
+  <!-- Arrow 1 -->
+  <line x1="350" y1="135" x2="350" y2="158" stroke="#58a6ff" stroke-width="2" marker-end="url(#arrow-blue)"/>
+
+  <!-- ── ROW 2: Aggregator ───────────────────────────────────────── -->
+  <g transform="translate(175, 160)">
+    <rect x="0" y="0" width="350" height="44" rx="8" fill="#0d419d" stroke="#58a6ff" stroke-width="1.5"/>
+    <text x="175" y="18" text-anchor="middle" fill="#cae8ff" font-size="12" font-weight="bold">app/fetchers/aggregator.py</text>
+    <text x="175" y="34" text-anchor="middle" fill="#8b949e" font-size="10">fetch_all_news() · fetch_article_text()</text>
+  </g>
+
+  <!-- Arrow 2 -->
+  <line x1="350" y1="214" x2="350" y2="237" stroke="#58a6ff" stroke-width="2" marker-end="url(#arrow-blue)"/>
+
+  <!-- ── ROW 3: Story Selector ──────────────────────────────────── -->
+  <g transform="translate(150, 239)">
+    <rect x="0" y="0" width="400" height="56" rx="8" fill="#0d419d" stroke="#58a6ff" stroke-width="1.5"/>
+    <text x="200" y="18" text-anchor="middle" fill="#cae8ff" font-size="12" font-weight="bold">app/summarizer/story_selector.py</text>
+    <text x="200" y="32" text-anchor="middle" fill="#8b949e" font-size="10">dedupe_stories() · heuristic_story_score()</text>
+    <text x="200" y="46" text-anchor="middle" fill="#8b949e" font-size="10">ai_plan_story_batch() → VideoJob[]</text>
+  </g>
+
+  <!-- Arrow 3 -->
+  <line x1="350" y1="305" x2="350" y2="328" stroke="#58a6ff" stroke-width="2" marker-end="url(#arrow-blue)"/>
+
+  <!-- ── ROW 4: Script Generator ────────────────────────────────── -->
+  <g transform="translate(150, 330)">
+    <rect x="0" y="0" width="400" height="56" rx="8" fill="#0d419d" stroke="#58a6ff" stroke-width="1.5"/>
+    <text x="200" y="18" text-anchor="middle" fill="#cae8ff" font-size="12" font-weight="bold">app/script_generator/generator.py</text>
+    <text x="200" y="32" text-anchor="middle" fill="#8b949e" font-size="10">Ollama → Gemini → static fallback</text>
+    <text x="200" y="46" text-anchor="middle" fill="#8b949e" font-size="10">generate_script_with_review() · normalize_script()</text>
+  </g>
+
+  <!-- Arrow 4 -->
+  <line x1="350" y1="396" x2="350" y2="419" stroke="#58a6ff" stroke-width="2" marker-end="url(#arrow-blue)"/>
+
+  <!-- ── ROW 5: TTS ──────────────────────────────────────────────── -->
+  <g transform="translate(200, 421)">
+    <rect x="0" y="0" width="300" height="44" rx="8" fill="#0d419d" stroke="#58a6ff" stroke-width="1.5"/>
+    <text x="150" y="18" text-anchor="middle" fill="#cae8ff" font-size="12" font-weight="bold">app/tts/engine.py</text>
+    <text x="150" y="34" text-anchor="middle" fill="#8b949e" font-size="10">edge-tts (online) → pyttsx3 (offline)</text>
+  </g>
+
+  <!-- Arrow 5 -->
+  <line x1="350" y1="475" x2="350" y2="498" stroke="#58a6ff" stroke-width="2" marker-end="url(#arrow-blue)"/>
+
+  <!-- ── ROW 6: Video Engine ────────────────────────────────────── -->
+  <g transform="translate(150, 500)">
+    <rect x="0" y="0" width="400" height="56" rx="8" fill="#0d419d" stroke="#58a6ff" stroke-width="1.5"/>
+    <text x="200" y="18" text-anchor="middle" fill="#cae8ff" font-size="12" font-weight="bold">app/video_engine/assembler.py</text>
+    <text x="200" y="32" text-anchor="middle" fill="#8b949e" font-size="10">get_stock_video() · download_file()</text>
+    <text x="200" y="46" text-anchor="middle" fill="#8b949e" font-size="10">assemble_video() via FFmpeg · 1080×1920</text>
+  </g>
+
+  <!-- Arrow 6 -->
+  <line x1="350" y1="566" x2="350" y2="589" stroke="#58a6ff" stroke-width="2" marker-end="url(#arrow-blue)"/>
+
+  <!-- ── ROW 7: Subtitles ───────────────────────────────────────── -->
+  <g transform="translate(200, 591)">
+    <rect x="0" y="0" width="300" height="44" rx="8" fill="#0d419d" stroke="#58a6ff" stroke-width="1.5"/>
+    <text x="150" y="18" text-anchor="middle" fill="#cae8ff" font-size="12" font-weight="bold">app/subtitles/generator.py</text>
+    <text x="150" y="34" text-anchor="middle" fill="#8b949e" font-size="10">generate_srt() · save_srt()</text>
+  </g>
+
+  <!-- Arrow 7 -->
+  <line x1="350" y1="645" x2="350" y2="668" stroke="#58a6ff" stroke-width="2" marker-end="url(#arrow-blue)"/>
+
+  <!-- ── ROW 8: YouTube Uploader ────────────────────────────────── -->
+  <g transform="translate(150, 670)">
+    <rect x="0" y="0" width="400" height="56" rx="8" fill="#0d419d" stroke="#58a6ff" stroke-width="1.5"/>
+    <text x="200" y="18" text-anchor="middle" fill="#cae8ff" font-size="12" font-weight="bold">app/uploader/youtube.py</text>
+    <text x="200" y="32" text-anchor="middle" fill="#8b949e" font-size="10">OAuth2 · token refresh · quota cooldown</text>
+    <text x="200" y="46" text-anchor="middle" fill="#8b949e" font-size="10">upload_youtube_scheduled()</text>
+  </g>
+
+  <!-- Arrow 8 -->
+  <line x1="350" y1="736" x2="350" y2="759" stroke="#58a6ff" stroke-width="2" marker-end="url(#arrow-blue)"/>
+
+  <!-- ── ROW 9: YouTube ─────────────────────────────────────────── -->
+  <g transform="translate(200, 761)">
+    <rect x="0" y="0" width="300" height="44" rx="8" fill="#b91c1c" stroke="#ef4444" stroke-width="1.5"/>
+    <text x="150" y="18" text-anchor="middle" fill="#fee2e2" font-size="12" font-weight="bold">YouTube Data API v3</text>
+    <text x="150" y="34" text-anchor="middle" fill="#fca5a5" font-size="10">Scheduled private → public Short</text>
+  </g>
+
+  <!-- ── Utility sidebar ───────────────────────────────────────── -->
+  <g transform="translate(570, 239)">
+    <rect x="0" y="0" width="110" height="200" rx="8" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+    <text x="55" y="16" text-anchor="middle" fill="#8b949e" font-size="9" font-weight="bold">app/utils/</text>
+    <rect x="8" y="22" width="94" height="22" rx="4" fill="#21262d"/>
+    <text x="55" y="37" text-anchor="middle" fill="#7ee787" font-size="9">models.py</text>
+    <text x="55" y="49" text-anchor="middle" fill="#6e7681" font-size="8">VideoJob state</text>
+    <rect x="8" y="57" width="94" height="22" rx="4" fill="#21262d"/>
+    <text x="55" y="72" text-anchor="middle" fill="#7ee787" font-size="9">deduplication.py</text>
+    <text x="55" y="84" text-anchor="middle" fill="#6e7681" font-size="8">title hashing</text>
+    <rect x="8" y="92" width="94" height="22" rx="4" fill="#21262d"/>
+    <text x="55" y="107" text-anchor="middle" fill="#7ee787" font-size="9">retry.py</text>
+    <text x="55" y="119" text-anchor="middle" fill="#6e7681" font-size="8">transient retries</text>
+    <rect x="8" y="127" width="94" height="22" rx="4" fill="#21262d"/>
+    <text x="55" y="142" text-anchor="middle" fill="#7ee787" font-size="9">cleanup.py</text>
+    <text x="55" y="154" text-anchor="middle" fill="#6e7681" font-size="8">file management</text>
+    <rect x="8" y="162" width="94" height="22" rx="4" fill="#21262d"/>
+    <text x="55" y="177" text-anchor="middle" fill="#7ee787" font-size="9">config/settings.py</text>
+    <text x="55" y="189" text-anchor="middle" fill="#6e7681" font-size="8">env variables</text>
+  </g>
+
+  <!-- ── Footer ─────────────────────────────────────────────────── -->
+  <text x="350" y="870" text-anchor="middle" fill="#30363d" font-size="10">CyberShorts Bot — MIT License</text>
+</svg>

@@ -1,0 +1,77 @@
+# ─── Python ──────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.whl
+
+# ─── Virtual environments ────────────────────────────────────────────────────────
+venv/
+.venv/
+env/
+ENV/
+.env/
+
+# ─── Environment / secrets ───────────────────────────────────────────────────────
+.env
+credentials.json
+token.json
+client_secret*.json
+service_account*.json
+*_secret.json
+
+# Keep example files (safe to commit — no real keys)
+!credentials.json.example
+!token.json.example
+
+# ─── Generated media (contents ignored, folders kept via .gitkeep) ───────────────
+output/*
+assets/audio/*
+assets/videos/*
+assets/temp/*
+assets/subtitles/*
+*.mp3
+*.mp4
+*.wav
+*.srt
+*.vtt
+
+# ─── Bot state files ─────────────────────────────────────────────────────────────
+used_stories.json
+agent_jobs.json
+youtube_quota_state.json
+
+# ─── Logs (contents ignored, folder kept via .gitkeep) ───────────────────────────
+logs/*
+*.log
+
+# Keep folder anchors so git tracks empty directories
+!**/.gitkeep
+
+# ─── Testing & coverage ─────────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# ─── IDE / editors ───────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ─── Docker ──────────────────────────────────────────────────────────────────────
+docker-compose.override.yml
+
+# ─── Py Cache folder ──────────────────────────────────────────────────────────────────────
+__pycache__/

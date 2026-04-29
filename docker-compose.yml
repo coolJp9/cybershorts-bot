@@ -1,0 +1,24 @@
+version: "3.9"
+
+services:
+  cyberbot:
+    build: .
+    container_name: cybershorts_bot
+    restart: unless-stopped
+    command: python main.py --mode loop
+    env_file:
+      - .env
+    volumes:
+      # Persist generated media and state across restarts
+      - ./output:/app/output
+      - ./logs:/app/logs
+      - ./assets:/app/assets
+      # Mount credentials — never bake these into the image
+      - ./credentials.json:/app/credentials.json:ro
+      - ./token.json:/app/token.json
+      - ./used_stories.json:/app/used_stories.json
+      - ./agent_jobs.json:/app/agent_jobs.json
+      - ./youtube_quota_state.json:/app/youtube_quota_state.json
+    # If running Ollama on the host, allow the container to reach it
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

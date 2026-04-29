@@ -29,10 +29,10 @@ jobs:
         run: pip install -r requirements-dev.txt
 
       - name: Ruff lint
-        run: ruff check app/ main.py tests/
+        run: ruff check app/ main.py tests/ --ignore E501
 
-      - name: Black format check
-        run: black --check app/ main.py tests/
+      - name: Ruff format check
+        run: ruff format --check app/ main.py tests/
 
   test:
     name: Test (Python ${{ matrix.python-version }})

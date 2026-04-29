@@ -2,7 +2,7 @@
 
 import logging
 import time
-from typing import Any, Callable
+from typing import Any, Callable, Optional
 
 from app.config.settings import NETWORK_RETRIES
 
@@ -19,7 +19,7 @@ def retry_call(
 
     Raises the last exception if every attempt fails.
     """
-    last_error: Exception | None = None
+    last_error: Optional[Exception] = None
     for attempt in range(1, max(1, attempts) + 1):
         try:
             return fn()
